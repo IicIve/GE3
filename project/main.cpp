@@ -25,6 +25,7 @@
 #include <xaudio2.h>
 #include <direct.h>
 
+#include "Input.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -135,6 +136,9 @@ struct SoundData {
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	CoInitializeEx(0, COINIT_MULTITHREADED);
 	SetUnhandledExceptionFilter(ExportDump);
+
+	//ポインタ
+	Input* input = nullptr;
 
 	//関数の宣言
 	void Log(const std::string & message);
@@ -898,6 +902,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//SRV切り替え用bool変数
 	bool useMonsterBall = false;
 
+	//入力の初期化
+	input = new Input();
+	input->Initialize(wc.hInstance, hwnd);
+
 	//メインループ
 	MSG msg{};
 	//ウィンドウの×ボタンが押されるまでループ
@@ -909,10 +917,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		} else {
 			//ゲームの処理
 
+
+			//入力の更新
+			input->Update();
+
 			cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 			viewMatrix = Inverse(cameraMatrix);
 
-			transform.rotate.y += 0.01f;
+			//transform.rotate.y += 0.01f;
 			worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 			wvpData->WVP = worldViewProjectionMatrix;
@@ -925,6 +937,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			uvTransformMatrix = MakeAffineMatrix(uvTransformSprite.scale, uvTransformSprite.rotate, uvTransformSprite.translate);
 			materialDataSprite->uvTransform = uvTransformMatrix;
+
+			if (input->TriggerKey(DIK_0)) {
+				OutputDebugStringA("Hit 0\n");
+			}
 
 			ImGui_ImplDX12_NewFrame();
 			ImGui_ImplWin32_NewFrame();
