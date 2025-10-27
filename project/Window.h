@@ -19,7 +19,7 @@ public:
 	//関数
 	static LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 	void Initialize();
-	void Update();
+	bool ProcessMessage();
 	void Finalize();
 
 	//ゲッター
