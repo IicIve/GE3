@@ -40,7 +40,19 @@ void Window::Initialize() {
 	ShowWindow(hwnd, SW_SHOW);
 }
 
-void Window::Update() {
+bool Window::ProcessMessage() {
+	MSG msg{};
+
+	if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+	if (msg.message == WM_QUIT) {
+		return true;
+	}
+
+	return false;
 }
 
 void Window::Finalize() {
