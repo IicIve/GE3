@@ -26,6 +26,7 @@
 #include <direct.h>
 
 #include "Input.h"
+#include "Window.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -134,11 +135,15 @@ struct SoundData {
 
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-	CoInitializeEx(0, COINIT_MULTITHREADED);
+	//CoInitializeEx(0, COINIT_MULTITHREADED);
 	SetUnhandledExceptionFilter(ExportDump);
 
 	//ポインタ
 	Input* input = nullptr;
+	Window* window = nullptr;
+
+	//初期化
+	window = new Window();
 
 	//関数の宣言
 	void Log(const std::string & message);
@@ -199,8 +204,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//変数の宣言
 
 	//クライアント領域のサイズ
-	const int32_t kClientWidth = 1280;
-	const int32_t kClientHeight = 720;
+	//const int32_t kClientWidth = 1280;
+	//const int32_t kClientHeight = 720;
 
 	Transform transform{ {1.0f,1.0f,1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 	Transform transformSprite{ {1.0f,1.0f,1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
@@ -208,7 +213,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Sphere sphere = { {0.0f, 0.0f, 0.0f}, 1.0f };
 	Transform uvTransformSprite{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f}, };
 	//std::vector<VertexData> sphereVertices;
-	Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, static_cast<float>(kClientWidth) / static_cast<float>(kClientHeight), 0.1f, 100.0f);
+	Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, static_cast<float>(Window::kClientWidth) / static_cast<float>(Window::kClientHeight), 0.1f, 100.0f);
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 	Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
@@ -218,7 +223,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//スプライトの変換行列
 	Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
 	Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
-	Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, static_cast<float>(kClientWidth), static_cast<float>(kClientHeight), 0.0f, 100.0f);
+	Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, static_cast<float>(Window::kClientWidth), static_cast<float>(Window::kClientHeight), 0.0f, 100.0f);
 	Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
 
 	//球の変換行列
@@ -236,32 +241,34 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	IXAudio2MasteringVoice* masterVoice;
 	HRESULT result;
 
-	WNDCLASS wc{};
-	wc.lpfnWndProc = WindowProc; //ウィンドウプロシージャ
-	wc.lpszClassName = L"CG2WindowClass"; //ウィンドウクラス名
-	wc.hInstance = GetModuleHandle(nullptr); //インスタンスハンドル
-	wc.hCursor = LoadCursor(nullptr, IDC_ARROW); //カーソル
-	RegisterClass(&wc); //ウィンドウクラスを登録する
+	window->Initialize();
 
-	//ウィンドウサイズを表す構造体にクライアント領域を入れる
-	RECT wrc = { 0,0, kClientWidth, kClientHeight };
+	//WNDCLASS wc{};
+	//wc.lpfnWndProc = WindowProc; //ウィンドウプロシージャ
+	//wc.lpszClassName = L"CG2WindowClass"; //ウィンドウクラス名
+	//wc.hInstance = GetModuleHandle(nullptr); //インスタンスハンドル
+	//wc.hCursor = LoadCursor(nullptr, IDC_ARROW); //カーソル
+	//RegisterClass(&wc); //ウィンドウクラスを登録する
 
-	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
+	////ウィンドウサイズを表す構造体にクライアント領域を入れる
+	//RECT wrc = { 0,0, kClientWidth, kClientHeight };
 
-	HWND hwnd = CreateWindow(
-		wc.lpszClassName,
-		L"CG2",
-		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
-		wrc.right - wrc.left,
-		wrc.bottom - wrc.top,
-		nullptr,
-		nullptr,
-		wc.hInstance,
-		nullptr);
+	//AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
 
-	ShowWindow(hwnd, SW_SHOW);
+	//HWND hwnd = CreateWindow(
+	//	wc.lpszClassName,
+	//	L"CG2",
+	//	WS_OVERLAPPEDWINDOW,
+	//	CW_USEDEFAULT,
+	//	CW_USEDEFAULT,
+	//	wrc.right - wrc.left,
+	//	wrc.bottom - wrc.top,
+	//	nullptr,
+	//	nullptr,
+	//	wc.hInstance,
+	//	nullptr);
+
+	//ShowWindow(hwnd, SW_SHOW);
 
 	result = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
 	result = xAudio2->CreateMasteringVoice(&masterVoice);
@@ -386,14 +393,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//スワップチェーンを生成する
 	IDXGISwapChain4* swapChain = nullptr;
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
-	swapChainDesc.Width = kClientWidth;
-	swapChainDesc.Height = kClientHeight;
+	swapChainDesc.Width = Window::kClientWidth;
+	swapChainDesc.Height = Window::kClientHeight;
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	swapChainDesc.SampleDesc.Count = 1;
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapChainDesc.BufferCount = 2;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue, hwnd, &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(&swapChain));
+	hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue, window->GetHwnd(), &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(&swapChain));
 	assert(SUCCEEDED(hr));
 
 	const uint32_t descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -787,8 +794,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//ビューポート
 	D3D12_VIEWPORT viewport{};
-	viewport.Width = kClientWidth;
-	viewport.Height = kClientHeight;
+	viewport.Width = Window::kClientWidth;
+	viewport.Height = Window::kClientHeight;
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
 	viewport.MinDepth = 0.0f;
@@ -797,15 +804,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//シザー矩形
 	D3D12_RECT scissorRect{};
 	scissorRect.left = 0;
-	scissorRect.right = kClientWidth;
+	scissorRect.right = Window::kClientWidth;
 	scissorRect.top = 0;
-	scissorRect.bottom = kClientHeight;
+	scissorRect.bottom = Window::kClientHeight;
 
 	//ImGuiの初期化
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
-	ImGui_ImplWin32_Init(hwnd);
+	ImGui_ImplWin32_Init(window->GetHwnd());
 	ImGui_ImplDX12_Init(device, swapChainDesc.BufferCount, rtvDesc.Format, srvDescriptorHeap,
 		srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
@@ -886,7 +893,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	//DepthStencilTextureをウィンドウサイズで作成
-	ID3D12Resource* depthStencilResource = CreateDepthStencilTextureResource(device, kClientWidth, kClientHeight);
+	ID3D12Resource* depthStencilResource = CreateDepthStencilTextureResource(device, Window::kClientWidth, Window::kClientHeight);
 
 	//DSV用のヒープでデイスクリプタの数は1
 	ID3D12DescriptorHeap* dsvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
@@ -904,7 +911,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//入力の初期化
 	input = new Input();
-	input->Initialize(wc.hInstance, hwnd);
+	input->Initialize(window);
 
 	//メインループ
 	MSG msg{};
@@ -1105,7 +1112,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	debugController->Release();
 
 #endif
-	CloseWindow(hwnd);
+	delete input;
+	delete window;
+
+	CloseWindow(window->GetHwnd());
 
 	//リソースリークチェック
 	IDXGIDebug1* debug;
