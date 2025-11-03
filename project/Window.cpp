@@ -8,10 +8,6 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 void Window::Initialize() {
 	HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
 
-	//クライアント領域のサイズ
-	//const int32_t kClientWidth = 1280;
-	//const int32_t kClientHeight = 720;
-
 	//WNDCLASS wc{};
 	wc.lpfnWndProc = WindowProc; //ウィンドウプロシージャ
 	wc.lpszClassName = L"CG2WindowClass"; //ウィンドウクラス名

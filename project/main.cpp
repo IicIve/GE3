@@ -1,5 +1,5 @@
 #include <Windows.h>
-#include "cstdint"
+//#include "cstdint"
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -13,7 +13,7 @@
 #include <dxgidebug.h>
 #include <dxcapi.h>
 #include <Vector>
-#include "externals/imgui/imgui.h"
+//#include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
 #include "externals/DirectXTex/DirectXTex.h"
@@ -21,12 +21,13 @@
 #include <filesystem>
 #include "externals/DirectXTex/d3dx12.h"
 #include <numbers>
-#include <wrl.h>
+//#include <wrl.h>
 #include <xaudio2.h>
 #include <direct.h>
 
 #include "Input.h"
 #include "Window.h"
+#include "DirectXCommon.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -139,9 +140,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//ポインタ
 	Input* input = nullptr;
 	Window* window = nullptr;
+	DirectXCommon* dxCommon = nullptr;
 
 	//初期化
 	window = new Window();
+	dxCommon = new DirectXCommon();
 
 	//関数の宣言
 	void Log(const std::string & message);
@@ -200,10 +203,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//MaterialData LoadMaterialTemplateFile(const std::string & directoryPath, const std::string & filename);
 
 	//変数の宣言
-
-	//クライアント領域のサイズ
-	//const int32_t kClientWidth = 1280;
-	//const int32_t kClientHeight = 720;
 
 	Transform transform{ {1.0f,1.0f,1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 	Transform transformSprite{ {1.0f,1.0f,1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
