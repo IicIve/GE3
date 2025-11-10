@@ -12,6 +12,8 @@ generated/
 ipch/
 
 # その他
+Dumps/
+imgui.ini
 *.log
 .DS_Store
 Thumbs.db
