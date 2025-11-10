@@ -17,4 +17,3 @@ imgui.ini
 *.log
 .DS_Store
 Thumbs.db
-git rm --cached -r Dumps
