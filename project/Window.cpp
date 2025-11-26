@@ -3,14 +3,12 @@
 #include <cstdint>
 #include "externals/imgui/imgui.h"
 
+#pragma comment(lib, "winmm.lib")
+
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 void Window::Initialize() {
 	HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
-
-	//クライアント領域のサイズ
-	//const int32_t kClientWidth = 1280;
-	//const int32_t kClientHeight = 720;
 
 	//WNDCLASS wc{};
 	wc.lpfnWndProc = WindowProc; //ウィンドウプロシージャ
@@ -18,6 +16,7 @@ void Window::Initialize() {
 	wc.hInstance = GetModuleHandle(nullptr); //インスタンスハンドル
 	wc.hCursor = LoadCursor(nullptr, IDC_ARROW); //カーソル
 	RegisterClass(&wc); //ウィンドウクラスを登録する
+	timeBeginPeriod(1);//システムタイマーの分解能を上げる
 
 	//ウィンドウサイズを表す構造体にクライアント領域を入れる
 	RECT wrc = { 0,0, kClientWidth, kClientHeight };
