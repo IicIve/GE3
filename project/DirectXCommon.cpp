@@ -19,6 +19,7 @@ using namespace Logger;
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
+const uint32_t DirectXCommon::kMaxSRVCount = 512;
 //extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 void DirectXCommon::Initialize(Window* window) {
@@ -40,7 +41,7 @@ void DirectXCommon::Initialize(Window* window) {
 	viewportInitialize();
 	scissorRectInitialize();
 	DXCCompilerInitialize();
-	//ImGuiInitialize();
+	//ImGuiInitialize();srvDesc
 
 }
 
@@ -268,43 +269,43 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::UploadTextureData(const Mi
 	return intermediateResource;
 }
 
-DirectX::ScratchImage DirectXCommon::LoadTexture(const std::string& filePath) {
-	//テクスチャファイルを読んでプログラムで扱えるようにする
-	DirectX::ScratchImage image{};
-	std::wstring filePathW = ConvertString(filePath);
-
-    //デバッグ表示
-	std::wcout << L"Loading texture: " << filePathW << std::endl;
-
-	// ファイル存在確認
-	std::filesystem::path texturePath = std::filesystem::absolute(filePath);
-	std::wcout << L"Absolute path: " << texturePath.wstring() << std::endl;
-	if (!std::filesystem::exists(texturePath)) {
-		std::cerr << "File not found: " << texturePath << std::endl;
-		assert(false);
-	}
-	HRESULT hr = DirectX::LoadFromWICFile(texturePath.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
-
-	//if (!std::filesystem::exists(filePath)) {
-	//	std::cerr << "File not found: " << filePath << std::endl;
-	//	assert(false); // または return {};
-	//}
-	//HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
-
-	if (FAILED(hr)) {
-		std::wcout << L"Failed to load texture: " << filePathW << L", HRESULT = " << std::hex << hr << std::endl;
-	}
-
-	//assert(SUCCEEDED(hr));
-
-	//ミップマップの作成
-	DirectX::ScratchImage mipImages{};
-	hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
-	assert(SUCCEEDED(hr));
-
-	return mipImages;
-	
-}
+//DirectX::ScratchImage DirectXCommon::LoadTexture(const std::string& filePath) {
+//	//テクスチャファイルを読んでプログラムで扱えるようにする
+//	DirectX::ScratchImage image{};
+//	std::wstring filePathW = ConvertString(filePath);
+//
+//    //デバッグ表示
+//	std::wcout << L"Loading texture: " << filePathW << std::endl;
+//
+//	// ファイル存在確認
+//	std::filesystem::path texturePath = std::filesystem::absolute(filePath);
+//	std::wcout << L"Absolute path: " << texturePath.wstring() << std::endl;
+//	if (!std::filesystem::exists(texturePath)) {
+//		std::cerr << "File not found: " << texturePath << std::endl;
+//		assert(false);
+//	}
+//	HRESULT hr = DirectX::LoadFromWICFile(texturePath.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+//
+//	//if (!std::filesystem::exists(filePath)) {
+//	//	std::cerr << "File not found: " << filePath << std::endl;
+//	//	assert(false); // または return {};
+//	//}
+//	//HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+//
+//	if (FAILED(hr)) {
+//		std::wcout << L"Failed to load texture: " << filePathW << L", HRESULT = " << std::hex << hr << std::endl;
+//	}
+//
+//	//assert(SUCCEEDED(hr));
+//
+//	//ミップマップの作成
+//	DirectX::ScratchImage mipImages{};
+//	hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
+//	assert(SUCCEEDED(hr));
+//
+//	return mipImages;
+//	
+//}
 
 void DirectXCommon::deviceGenerate() {
 	HRESULT hr;
@@ -473,7 +474,7 @@ void DirectXCommon::descriptorHeapGenerate() {
 
 	//ディスクリプタヒープの生成
 	rtvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
-	srvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
+	srvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
 	//DSV用のヒープでデイスクリプタの数は1
 	dsvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
 }
@@ -616,6 +617,26 @@ D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVCPUDescriptorHandle(uint32_t in
 
 D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVGPUDescriptorHandle(uint32_t index) {
 	return GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
+}
+
+void DirectXCommon::WaitForGpu() {
+	// フェンス値を進める
+	fenceValue++;
+
+	// GPU にフェンスを通知
+	commandQueue->Signal(fence.Get(), fenceValue);
+
+	// GPU がまだ追いついていなければ待つ
+	if (fence->GetCompletedValue() < fenceValue) {
+		HANDLE eventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+		assert(eventHandle != nullptr);
+
+		fence->SetEventOnCompletion(fenceValue, eventHandle);
+		WaitForSingleObject(eventHandle, INFINITE);
+
+		CloseHandle(eventHandle);
+	}
+
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetCPUDescriptorHandle(
