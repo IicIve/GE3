@@ -33,7 +33,7 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource> texture, const DirectX::ScratchImage& mipImages);
 
 	//テクスチャファイルの読み込み
-	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
+	/*static DirectX::ScratchImage LoadTexture(const std::string& filePath);*/
 
 	/// <summary>
 	/// ディスクリプタヒープを生成する
@@ -61,6 +61,12 @@ public:
 	//ゲッター
 	ID3D12Device* GetDevice() const { return device.Get(); }
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
+	ID3D12CommandQueue* GetCommandQueue() const { return commandQueue.Get(); }
+	ID3D12CommandAllocator* GetCommandAllocator() const { return commandAllocator.Get(); }
+	void WaitForGpu();
+
+	//最大SRV数 (最大テクスチャ枚数)
+	static const uint32_t kMaxSRVCount;
 
 private:
 	//初期化関数
@@ -145,6 +151,7 @@ private:
 	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler;
 	//記録時間(FPS固定用)
 	std::chrono::steady_clock::time_point reference_;
+	
 
 };
 
