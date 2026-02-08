@@ -33,16 +33,19 @@ jobs:
           for pattern in $UNWANTED_DIR_PATTERNS; do
             DIR_CONDITIONS+=(-o -iname "$pattern")
           done
-          unset DIR_CONDITIONS[0]
           # ファイル条件を構築 (最初の不要な -o を後で削除)
           NAME_CONDITIONS=()
           for pattern in $UNWANTED_NAME_PATTERNS; do
             NAME_CONDITIONS+=(-o -iname "$pattern")
           done
-          unset NAME_CONDITIONS[0]
-           find . \
-           \( "${DIR_CONDITIONS[@]}" \) -type d -o \
-           \( "${NAME_CONDITIONS[@]}" \) -type f
+          # 末尾の -o を削除
+          unset 'DIR_CONDITIONS[-1]'
+          unset 'NAME_CONDITIONS[-1]'
+
+          # find 実行（← パスは必ず最初！）
+          find . \
+          \( "${DIR_CONDITIONS[@]}" \) -type d -o \
+          \( "${NAME_CONDITIONS[@]}" \) -type f
           #1回の find 実行で全体を検索
           #1. .git を除外
           #2. 不要なディレクトリを検索(-type d)し、見つけたらパスを出力(-print)し、その中身を枝刈り(-prune)
