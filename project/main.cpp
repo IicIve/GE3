@@ -36,6 +36,11 @@
 #include "SpriteCommon.h"
 #include "Sprite.h"
 #include "TextureManager.h"
+#include "ModelCommon.h"
+#include "Model.h"
+#include "Object3d.h"
+#include "Object3dCommon.h"
+#include "ModelManager.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -94,14 +99,14 @@ static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception);
 //	Matrix4x4 uvTransform;
 //};
 
-struct MaterialData {
-	std::string textureFilePath;
-};
-
-struct ModelData {
-	std::vector<VertexData> vertices;
-	MaterialData material;
-};
+//struct MaterialData {
+//	std::string textureFilePath;
+//};
+//
+//struct ModelData {
+//	std::vector<VertexData> vertices;
+//	MaterialData material;
+//};
 
 struct Sphere {
 	Vector3 center;
@@ -113,11 +118,11 @@ struct Sphere {
 //	Matrix4x4 World;
 //};
 
-struct DirectionalLight {
-	Vector4 color;
-	Vector3 direction;
-	float intensity;
-};
+//struct DirectionalLight {
+//	Vector4 color;
+//	Vector3 direction;
+//	float intensity;
+//};
 
 struct ChunkHeader {
 	char id[4];
@@ -151,12 +156,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	DirectXCommon* dxCommon = nullptr;
 	SpriteCommon* spriteCommon = nullptr;
 	Sprite* sprite = nullptr;
+	ModelCommon* modelCommon = nullptr;
+	Model* model = nullptr;
+	Object3dCommon* object3dCommon = nullptr;
+	Object3d* object3d = nullptr;
 
 	//初期化
 	window = new Window();
 	dxCommon = new DirectXCommon();
 	spriteCommon = new SpriteCommon();
 	sprite = new Sprite();
+	modelCommon = new ModelCommon();
+	model = new Model();
+	object3dCommon = new Object3dCommon();
+	object3d = new Object3d();
 
 	////関数の宣言
 	//void Log(const std::string & message);
@@ -176,10 +189,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//Matrix4x4 MakeIdentity4x4();
 	//Matrix4x4 MakeAffineMatrix(const Vector3 & scale, const Vector3 & rotate, const Vector3 & translate);
 	//Vector3 Transform(const Vector3 & vector, const Matrix4x4 & matrix);
-	Matrix4x4 Inverse(const Matrix4x4 & m1);
+	//Matrix4x4 Inverse(const Matrix4x4 & m1);
 	//Matrix4x4 Multiply(const Matrix4x4 & m1, const Matrix4x4 & m2);
 	//Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip);
-	Matrix4x4 MakePerspectiveFovMatrix(float fowY, float aspectRatio, float nearClip, float farClip);
+	//Matrix4x4 MakePerspectiveFovMatrix(float fowY, float aspectRatio, float nearClip, float farClip);
 	//Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth);
 
 	//ID3D12DescriptorHeap* CreateDescriptorHeap(
@@ -211,22 +224,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap * descriptorHeap, uint32_t descriptorSize, uint32_t index);
 	//D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap * descriptorHeap, uint32_t descriptorSize, uint32_t index);
 
-	ModelData LoadObjFile(const std::string & directoryPath, const std::string & filename);
+	//ModelData LoadObjFile(const std::string & directoryPath, const std::string & filename);
 	////MaterialData LoadMaterialTemplateFile(const std::string & directoryPath, const std::string & filename);
 
 	////変数の宣言
-	HRESULT hr;
+	//HRESULT hr;
 	Transform transform{ {1.0f,1.0f,1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 	Transform transformSprite{ {1.0f,1.0f,1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 	Transform cameraTransform{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f,}, {0.0f,0.0f, -5.0f} };
 	Sphere sphere = { {0.0f, 0.0f, 0.0f}, 1.0f };
 	Transform uvTransformSprite{ {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f}, };
 	//std::vector<VertexData> sphereVertices;
-	Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, static_cast<float>(Window::kClientWidth) / static_cast<float>(Window::kClientHeight), 0.1f, 100.0f);
+	//Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, static_cast<float>(Window::kClientWidth) / static_cast<float>(Window::kClientHeight), 0.1f, 100.0f);
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 	Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+	//Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 	//transformationMatrixData = worldViewProjectionMatrix;
 
 	//スプライトの変換行列
@@ -241,7 +254,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{ 0.0f, 0.0f, 0.0f },                           // 回転
 		sphere.center                                   // 平行移動
 	);
-	Matrix4x4 worldViewProjectionMatrixSphere = Multiply(worldMatrixSphere, Multiply(viewMatrix, projectionMatrix));
+	//Matrix4x4 worldViewProjectionMatrixSphere = Multiply(worldMatrixSphere, Multiply(viewMatrix, projectionMatrix));
 
 	//UVTransform用の行列
 	Matrix4x4 uvTransformMatrix = MakeAffineMatrix(uvTransformSprite.scale, uvTransformSprite.rotate, uvTransformSprite.translate);
@@ -255,6 +268,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	TextureManager::GetInstance()->Initialize(dxCommon);
 	spriteCommon->Initialize(dxCommon);
 	sprite->Initialize(spriteCommon, "resources/uvChecker.png");
+	ModelManager::GetInstance()->Initialize(dxCommon);
+	ModelManager::GetInstance()->LoadModel("axis.obj"); //.objからモデルを読み込む
+	modelCommon->Initialize(dxCommon);
+	model->initialize(modelCommon, "resources", "axis.obj");
+	object3dCommon->Initialize(dxCommon);
+	object3d->Initialize(object3dCommon);
+	object3d->SetModel(model);
+	object3d->SetModel("axis.obj");
 
 	//result = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
 	//result = xAudio2->CreateMasteringVoice(&masterVoice);
@@ -437,7 +458,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 	//barrier.Transition.pResource = swapChainResources[backBufferIndex];
 	//barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-	//barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	//barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;BACK
 	//commandList->ResourceBarrier(1, &barrier);
 
 	//commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
@@ -917,7 +938,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		transform.rotate.y += 0.01f;
 		worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-		worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+		//worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 		//wvpData->WVP = worldViewProjectionMatrix;
 		//wvpData->World = worldMatrix;
 		//*wvpData = worldViewProjectionMatrix;
@@ -995,9 +1016,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		dxCommon->PreDraw();
 
-		spriteCommon->CreatePrimitiveTopology();
-		sprite->Update();
-		sprite->Draw();
+		//spriteCommon->CreatePrimitiveTopology();
+		//sprite->Update();
+		//sprite->Draw();
+		object3dCommon->CreatePrimitiveTopology();
+		object3d->Update();
+		object3d->Draw();
 
 		/*dxCommon->GetCommandList()->SetGraphicsRootSignature(rootSignature);
 		dxCommon->GetCommandList()->SetPipelineState(graphicsPipelineState);
@@ -1116,6 +1140,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	window->Finalize();
 
 	TextureManager::GetInstance()->Finalize();
+	ModelManager::GetInstance()->Finalize();
 	delete input;
 	delete window;
 	delete dxCommon;
@@ -1403,81 +1428,81 @@ static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception) {
 ////	return result;
 ////}
 //
-Matrix4x4 Inverse(const Matrix4x4& m1) {
-	Matrix4x4 result = {};
-	float det = 0.0f;
-
-	// 行列式を計算
-	det = m1.m[0][0] * (m1.m[1][1] * (m1.m[2][2] * m1.m[3][3] - m1.m[2][3] * m1.m[3][2]) -
-		m1.m[1][2] * (m1.m[2][1] * m1.m[3][3] - m1.m[2][3] * m1.m[3][1]) +
-		m1.m[1][3] * (m1.m[2][1] * m1.m[3][2] - m1.m[2][2] * m1.m[3][1])) -
-		m1.m[0][1] * (m1.m[1][0] * (m1.m[2][2] * m1.m[3][3] - m1.m[2][3] * m1.m[3][2]) -
-			m1.m[1][2] * (m1.m[2][0] * m1.m[3][3] - m1.m[2][3] * m1.m[3][0]) +
-			m1.m[1][3] * (m1.m[2][0] * m1.m[3][2] - m1.m[2][2] * m1.m[3][0])) +
-		m1.m[0][2] * (m1.m[1][0] * (m1.m[2][1] * m1.m[3][3] - m1.m[2][3] * m1.m[3][1]) -
-			m1.m[1][1] * (m1.m[2][0] * m1.m[3][3] - m1.m[2][3] * m1.m[3][0]) +
-			m1.m[1][3] * (m1.m[2][0] * m1.m[3][1] - m1.m[2][1] * m1.m[3][0])) -
-		m1.m[0][3] * (m1.m[1][0] * (m1.m[2][1] * m1.m[3][2] - m1.m[2][2] * m1.m[3][1]) -
-			m1.m[1][1] * (m1.m[2][0] * m1.m[3][2] - m1.m[2][2] * m1.m[3][0]) +
-			m1.m[1][2] * (m1.m[2][0] * m1.m[3][1] - m1.m[2][1] * m1.m[3][0]));
-
-	// 逆行列を計算
-	float invDet = 1.0f / det;
-
-	result.m[0][0] = invDet * (m1.m[1][1] * (m1.m[2][2] * m1.m[3][3] - m1.m[2][3] * m1.m[3][2]) -
-		m1.m[1][2] * (m1.m[2][1] * m1.m[3][3] - m1.m[2][3] * m1.m[3][1]) +
-		m1.m[1][3] * (m1.m[2][1] * m1.m[3][2] - m1.m[2][2] * m1.m[3][1]));
-	result.m[0][1] = -invDet * (m1.m[0][1] * (m1.m[2][2] * m1.m[3][3] - m1.m[2][3] * m1.m[3][2]) -
-		m1.m[0][2] * (m1.m[2][1] * m1.m[3][3] - m1.m[2][3] * m1.m[3][1]) +
-		m1.m[0][3] * (m1.m[2][1] * m1.m[3][2] - m1.m[2][2] * m1.m[3][1]));
-	result.m[0][2] = invDet * (m1.m[0][1] * (m1.m[1][2] * m1.m[3][3] - m1.m[1][3] * m1.m[3][2]) -
-		m1.m[0][2] * (m1.m[1][1] * m1.m[3][3] - m1.m[1][3] * m1.m[3][1]) +
-		m1.m[0][3] * (m1.m[1][1] * m1.m[3][2] - m1.m[1][2] * m1.m[3][1]));
-	result.m[0][3] = -invDet * (m1.m[0][1] * (m1.m[1][2] * m1.m[2][3] - m1.m[1][3] * m1.m[2][2]) -
-		m1.m[0][2] * (m1.m[1][1] * m1.m[2][3] - m1.m[1][3] * m1.m[2][1]) +
-		m1.m[0][3] * (m1.m[1][1] * m1.m[2][2] - m1.m[1][2] * m1.m[2][1]));
-
-	result.m[1][0] = -invDet * (m1.m[1][0] * (m1.m[2][2] * m1.m[3][3] - m1.m[2][3] * m1.m[3][2]) -
-		m1.m[1][2] * (m1.m[2][0] * m1.m[3][3] - m1.m[2][3] * m1.m[3][0]) +
-		m1.m[1][3] * (m1.m[2][0] * m1.m[3][2] - m1.m[2][2] * m1.m[3][0]));
-	result.m[1][1] = invDet * (m1.m[0][0] * (m1.m[2][2] * m1.m[3][3] - m1.m[2][3] * m1.m[3][2]) -
-		m1.m[0][2] * (m1.m[2][0] * m1.m[3][3] - m1.m[2][3] * m1.m[3][0]) +
-		m1.m[0][3] * (m1.m[2][0] * m1.m[3][2] - m1.m[2][2] * m1.m[3][0]));
-	result.m[1][2] = -invDet * (m1.m[0][0] * (m1.m[1][2] * m1.m[3][3] - m1.m[1][3] * m1.m[3][2]) -
-		m1.m[0][2] * (m1.m[1][0] * m1.m[3][3] - m1.m[1][3] * m1.m[3][0]) +
-		m1.m[0][3] * (m1.m[1][0] * m1.m[3][2] - m1.m[1][2] * m1.m[3][0]));
-	result.m[1][3] = invDet * (m1.m[0][0] * (m1.m[1][2] * m1.m[2][3] - m1.m[1][3] * m1.m[2][2]) -
-		m1.m[0][2] * (m1.m[1][0] * m1.m[2][3] - m1.m[1][3] * m1.m[2][0]) +
-		m1.m[0][3] * (m1.m[1][0] * m1.m[2][2] - m1.m[1][2] * m1.m[2][0]));
-
-	result.m[2][0] = invDet * (m1.m[1][0] * (m1.m[2][1] * m1.m[3][3] - m1.m[2][3] * m1.m[3][2]) -
-		m1.m[1][1] * (m1.m[2][0] * m1.m[3][3] - m1.m[2][3] * m1.m[3][0]) +
-		m1.m[1][3] * (m1.m[2][0] * m1.m[3][1] - m1.m[2][1] * m1.m[3][0]));
-	result.m[2][1] = -invDet * (m1.m[0][0] * (m1.m[2][1] * m1.m[3][3] - m1.m[2][3] * m1.m[3][2]) -
-		m1.m[0][1] * (m1.m[2][0] * m1.m[3][3] - m1.m[2][3] * m1.m[3][0]) +
-		m1.m[0][3] * (m1.m[2][0] * m1.m[3][1] - m1.m[2][1] * m1.m[3][0]));
-	result.m[2][2] = invDet * (m1.m[0][0] * (m1.m[1][1] * m1.m[3][3] - m1.m[1][3] * m1.m[3][1]) -
-		m1.m[0][1] * (m1.m[1][0] * m1.m[3][3] - m1.m[1][3] * m1.m[3][0]) +
-		m1.m[0][3] * (m1.m[1][0] * m1.m[3][1] - m1.m[1][1] * m1.m[3][0]));
-	result.m[2][3] = -invDet * (m1.m[0][0] * (m1.m[1][1] * m1.m[2][3] - m1.m[1][3] * m1.m[2][1]) -
-		m1.m[0][1] * (m1.m[1][0] * m1.m[2][3] - m1.m[1][3] * m1.m[2][0]) +
-		m1.m[0][3] * (m1.m[1][0] * m1.m[2][1] - m1.m[1][1] * m1.m[2][0]));
-
-	result.m[3][0] = -invDet * (m1.m[1][0] * (m1.m[2][1] * m1.m[3][2] - m1.m[2][2] * m1.m[3][1]) -
-		m1.m[1][1] * (m1.m[2][0] * m1.m[3][2] - m1.m[2][2] * m1.m[3][0]) +
-		m1.m[1][2] * (m1.m[2][0] * m1.m[3][1] - m1.m[2][1] * m1.m[3][0]));
-	result.m[3][1] = invDet * (m1.m[0][0] * (m1.m[2][1] * m1.m[3][2] - m1.m[2][2] * m1.m[3][1]) -
-		m1.m[0][1] * (m1.m[2][0] * m1.m[3][2] - m1.m[2][2] * m1.m[3][0]) +
-		m1.m[0][2] * (m1.m[2][0] * m1.m[3][1] - m1.m[2][1] * m1.m[3][0]));
-	result.m[3][2] = -invDet * (m1.m[0][0] * (m1.m[1][1] * m1.m[3][2] - m1.m[1][2] * m1.m[3][1]) -
-		m1.m[0][1] * (m1.m[1][0] * m1.m[3][2] - m1.m[1][2] * m1.m[3][0]) +
-		m1.m[0][2] * (m1.m[1][0] * m1.m[3][1] - m1.m[1][1] * m1.m[3][0]));
-	result.m[3][3] = invDet * (m1.m[0][0] * (m1.m[1][1] * m1.m[2][2] - m1.m[1][2] * m1.m[2][1]) -
-		m1.m[0][1] * (m1.m[1][0] * m1.m[2][2] - m1.m[1][2] * m1.m[2][0]) +
-		m1.m[0][2] * (m1.m[1][0] * m1.m[2][1] - m1.m[1][1] * m1.m[2][0]));
-
-	return result;
-}
+//Matrix4x4 Inverse(const Matrix4x4& m1) {
+//	Matrix4x4 result = {};
+//	float det = 0.0f;
+//
+//	// 行列式を計算
+//	det = m1.m[0][0] * (m1.m[1][1] * (m1.m[2][2] * m1.m[3][3] - m1.m[2][3] * m1.m[3][2]) -
+//		m1.m[1][2] * (m1.m[2][1] * m1.m[3][3] - m1.m[2][3] * m1.m[3][1]) +
+//		m1.m[1][3] * (m1.m[2][1] * m1.m[3][2] - m1.m[2][2] * m1.m[3][1])) -
+//		m1.m[0][1] * (m1.m[1][0] * (m1.m[2][2] * m1.m[3][3] - m1.m[2][3] * m1.m[3][2]) -
+//			m1.m[1][2] * (m1.m[2][0] * m1.m[3][3] - m1.m[2][3] * m1.m[3][0]) +
+//			m1.m[1][3] * (m1.m[2][0] * m1.m[3][2] - m1.m[2][2] * m1.m[3][0])) +
+//		m1.m[0][2] * (m1.m[1][0] * (m1.m[2][1] * m1.m[3][3] - m1.m[2][3] * m1.m[3][1]) -
+//			m1.m[1][1] * (m1.m[2][0] * m1.m[3][3] - m1.m[2][3] * m1.m[3][0]) +
+//			m1.m[1][3] * (m1.m[2][0] * m1.m[3][1] - m1.m[2][1] * m1.m[3][0])) -
+//		m1.m[0][3] * (m1.m[1][0] * (m1.m[2][1] * m1.m[3][2] - m1.m[2][2] * m1.m[3][1]) -
+//			m1.m[1][1] * (m1.m[2][0] * m1.m[3][2] - m1.m[2][2] * m1.m[3][0]) +
+//			m1.m[1][2] * (m1.m[2][0] * m1.m[3][1] - m1.m[2][1] * m1.m[3][0]));
+//
+//	// 逆行列を計算
+//	float invDet = 1.0f / det;
+//
+//	result.m[0][0] = invDet * (m1.m[1][1] * (m1.m[2][2] * m1.m[3][3] - m1.m[2][3] * m1.m[3][2]) -
+//		m1.m[1][2] * (m1.m[2][1] * m1.m[3][3] - m1.m[2][3] * m1.m[3][1]) +
+//		m1.m[1][3] * (m1.m[2][1] * m1.m[3][2] - m1.m[2][2] * m1.m[3][1]));
+//	result.m[0][1] = -invDet * (m1.m[0][1] * (m1.m[2][2] * m1.m[3][3] - m1.m[2][3] * m1.m[3][2]) -
+//		m1.m[0][2] * (m1.m[2][1] * m1.m[3][3] - m1.m[2][3] * m1.m[3][1]) +
+//		m1.m[0][3] * (m1.m[2][1] * m1.m[3][2] - m1.m[2][2] * m1.m[3][1]));
+//	result.m[0][2] = invDet * (m1.m[0][1] * (m1.m[1][2] * m1.m[3][3] - m1.m[1][3] * m1.m[3][2]) -
+//		m1.m[0][2] * (m1.m[1][1] * m1.m[3][3] - m1.m[1][3] * m1.m[3][1]) +
+//		m1.m[0][3] * (m1.m[1][1] * m1.m[3][2] - m1.m[1][2] * m1.m[3][1]));
+//	result.m[0][3] = -invDet * (m1.m[0][1] * (m1.m[1][2] * m1.m[2][3] - m1.m[1][3] * m1.m[2][2]) -
+//		m1.m[0][2] * (m1.m[1][1] * m1.m[2][3] - m1.m[1][3] * m1.m[2][1]) +
+//		m1.m[0][3] * (m1.m[1][1] * m1.m[2][2] - m1.m[1][2] * m1.m[2][1]));
+//
+//	result.m[1][0] = -invDet * (m1.m[1][0] * (m1.m[2][2] * m1.m[3][3] - m1.m[2][3] * m1.m[3][2]) -
+//		m1.m[1][2] * (m1.m[2][0] * m1.m[3][3] - m1.m[2][3] * m1.m[3][0]) +
+//		m1.m[1][3] * (m1.m[2][0] * m1.m[3][2] - m1.m[2][2] * m1.m[3][0]));
+//	result.m[1][1] = invDet * (m1.m[0][0] * (m1.m[2][2] * m1.m[3][3] - m1.m[2][3] * m1.m[3][2]) -
+//		m1.m[0][2] * (m1.m[2][0] * m1.m[3][3] - m1.m[2][3] * m1.m[3][0]) +
+//		m1.m[0][3] * (m1.m[2][0] * m1.m[3][2] - m1.m[2][2] * m1.m[3][0]));
+//	result.m[1][2] = -invDet * (m1.m[0][0] * (m1.m[1][2] * m1.m[3][3] - m1.m[1][3] * m1.m[3][2]) -
+//		m1.m[0][2] * (m1.m[1][0] * m1.m[3][3] - m1.m[1][3] * m1.m[3][0]) +
+//		m1.m[0][3] * (m1.m[1][0] * m1.m[3][2] - m1.m[1][2] * m1.m[3][0]));
+//	result.m[1][3] = invDet * (m1.m[0][0] * (m1.m[1][2] * m1.m[2][3] - m1.m[1][3] * m1.m[2][2]) -
+//		m1.m[0][2] * (m1.m[1][0] * m1.m[2][3] - m1.m[1][3] * m1.m[2][0]) +
+//		m1.m[0][3] * (m1.m[1][0] * m1.m[2][2] - m1.m[1][2] * m1.m[2][0]));
+//
+//	result.m[2][0] = invDet * (m1.m[1][0] * (m1.m[2][1] * m1.m[3][3] - m1.m[2][3] * m1.m[3][2]) -
+//		m1.m[1][1] * (m1.m[2][0] * m1.m[3][3] - m1.m[2][3] * m1.m[3][0]) +
+//		m1.m[1][3] * (m1.m[2][0] * m1.m[3][1] - m1.m[2][1] * m1.m[3][0]));
+//	result.m[2][1] = -invDet * (m1.m[0][0] * (m1.m[2][1] * m1.m[3][3] - m1.m[2][3] * m1.m[3][2]) -
+//		m1.m[0][1] * (m1.m[2][0] * m1.m[3][3] - m1.m[2][3] * m1.m[3][0]) +
+//		m1.m[0][3] * (m1.m[2][0] * m1.m[3][1] - m1.m[2][1] * m1.m[3][0]));
+//	result.m[2][2] = invDet * (m1.m[0][0] * (m1.m[1][1] * m1.m[3][3] - m1.m[1][3] * m1.m[3][1]) -
+//		m1.m[0][1] * (m1.m[1][0] * m1.m[3][3] - m1.m[1][3] * m1.m[3][0]) +
+//		m1.m[0][3] * (m1.m[1][0] * m1.m[3][1] - m1.m[1][1] * m1.m[3][0]));
+//	result.m[2][3] = -invDet * (m1.m[0][0] * (m1.m[1][1] * m1.m[2][3] - m1.m[1][3] * m1.m[2][1]) -
+//		m1.m[0][1] * (m1.m[1][0] * m1.m[2][3] - m1.m[1][3] * m1.m[2][0]) +
+//		m1.m[0][3] * (m1.m[1][0] * m1.m[2][1] - m1.m[1][1] * m1.m[2][0]));
+//
+//	result.m[3][0] = -invDet * (m1.m[1][0] * (m1.m[2][1] * m1.m[3][2] - m1.m[2][2] * m1.m[3][1]) -
+//		m1.m[1][1] * (m1.m[2][0] * m1.m[3][2] - m1.m[2][2] * m1.m[3][0]) +
+//		m1.m[1][2] * (m1.m[2][0] * m1.m[3][1] - m1.m[2][1] * m1.m[3][0]));
+//	result.m[3][1] = invDet * (m1.m[0][0] * (m1.m[2][1] * m1.m[3][2] - m1.m[2][2] * m1.m[3][1]) -
+//		m1.m[0][1] * (m1.m[2][0] * m1.m[3][2] - m1.m[2][2] * m1.m[3][0]) +
+//		m1.m[0][2] * (m1.m[2][0] * m1.m[3][1] - m1.m[2][1] * m1.m[3][0]));
+//	result.m[3][2] = -invDet * (m1.m[0][0] * (m1.m[1][1] * m1.m[3][2] - m1.m[1][2] * m1.m[3][1]) -
+//		m1.m[0][1] * (m1.m[1][0] * m1.m[3][2] - m1.m[1][2] * m1.m[3][0]) +
+//		m1.m[0][2] * (m1.m[1][0] * m1.m[3][1] - m1.m[1][1] * m1.m[3][0]));
+//	result.m[3][3] = invDet * (m1.m[0][0] * (m1.m[1][1] * m1.m[2][2] - m1.m[1][2] * m1.m[2][1]) -
+//		m1.m[0][1] * (m1.m[1][0] * m1.m[2][2] - m1.m[1][2] * m1.m[2][0]) +
+//		m1.m[0][2] * (m1.m[1][0] * m1.m[2][1] - m1.m[1][1] * m1.m[2][0]));
+//
+//	return result;
+//}
 
 //Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip) {
 //	Matrix4x4 result;
@@ -1505,20 +1530,20 @@ Matrix4x4 Inverse(const Matrix4x4& m1) {
 //	return result;
 //}
 
-Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip) {
-	Matrix4x4 result = {};
-
-	float yScale = 1.0f / std::tan(fovY / 2.0f);
-	float xScale = yScale / aspectRatio;
-
-	result.m[0][0] = xScale;
-	result.m[1][1] = yScale;
-	result.m[2][2] = farClip / (farClip - nearClip);
-	result.m[2][3] = 1.0f;
-	result.m[3][2] = -nearClip * farClip / (farClip - nearClip);
-
-	return result;
-}
+//Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip) {
+//	Matrix4x4 result = {};
+//
+//	float yScale = 1.0f / std::tan(fovY / 2.0f);
+//	float xScale = yScale / aspectRatio;
+//
+//	result.m[0][0] = xScale;
+//	result.m[1][1] = yScale;
+//	result.m[2][2] = farClip / (farClip - nearClip);
+//	result.m[2][3] = 1.0f;
+//	result.m[3][2] = -nearClip * farClip / (farClip - nearClip);
+//
+//	return result;
+//}
 
 Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth) {
 	Matrix4x4 result;
@@ -1714,89 +1739,89 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descrip
 	return handleGPU;
 }
 
-MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
-	MaterialData materialData;
-	std::string line;
-	std::ifstream file(directoryPath + "/" + filename);
-	assert(file.is_open());
-
-	while (std::getline(file, line)) {
-		std::string identifier;
-		std::istringstream s(line);
-		s >> identifier;
-
-		if (identifier == "map_Kd") {
-			std::string textureFilename;
-			s >> textureFilename;
-			materialData.textureFilePath = directoryPath + "/" + textureFilename;
-		}
-	}
-	return materialData;
-}
-
-ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename) {
-	ModelData modelData;
-	std::vector<Vector4> positions;
-	std::vector<Vector3> normals;
-	std::vector<Vector2> texcoords;
-	std::string line;
-	std::ifstream file(directoryPath + "/" + filename);
-	assert(file.is_open());
-
-	while (std::getline(file, line)) {
-		std::string identifier;
-		std::istringstream s(line);
-		s >> identifier;
-
-		if (identifier == "v") {
-			Vector4 position;
-			s >> position.x >> position.y >> position.z;
-			position.x *= -1.0f;
-			position.w = 1.0f;
-			positions.push_back(position);
-		} else if (identifier == "vt") {
-			Vector2 texcoord;
-			s >> texcoord.x >> texcoord.y;
-			texcoord.y = 1.0f - texcoord.y;
-			texcoords.push_back(texcoord);
-		} else if (identifier == "vn") {
-			Vector3 normal;
-			s >> normal.x >> normal.y >> normal.z;
-			normal.x *= -1.0f;
-			normals.push_back(normal);
-		} else if (identifier == "f") {
-			VertexData triangle[3];
-			//面は三角形限定
-			for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex) {
-				std::string vertexDefinition;
-				s >> vertexDefinition;
-				//
-				std::istringstream v(vertexDefinition);
-				uint32_t elementIndices[3];
-				for (uint32_t element = 0; element < 3; ++element) {
-					std::string index;
-					std::getline(v, index, '/');
-					elementIndices[element] = std::stoi(index);
-				}
-				//頂点を構築
-				Vector4 position = positions[elementIndices[0] - 1];
-				Vector2 texcoord = texcoords[elementIndices[1] - 1];
-				Vector3 normal = normals[elementIndices[2] - 1];
-				triangle[faceVertex] = { position, texcoord, normal };
-				//VertexData vertex = { position, texcoord, normal };
-				//modelData.vertices.push_back(vertex);
-			}
-			modelData.vertices.push_back(triangle[0]);
-			modelData.vertices.push_back(triangle[2]);
-			modelData.vertices.push_back(triangle[1]);
-		} else if (identifier == "mtllib") {
-			std::string materialFilename;
-			s >> materialFilename;
-			modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
-		}
-	}
-	return modelData;
-}
+//MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
+//	MaterialData materialData;
+//	std::string line;
+//	std::ifstream file(directoryPath + "/" + filename);
+//	assert(file.is_open());
+//
+//	while (std::getline(file, line)) {
+//		std::string identifier;
+//		std::istringstream s(line);
+//		s >> identifier;
+//
+//		if (identifier == "map_Kd") {
+//			std::string textureFilename;
+//			s >> textureFilename;
+//			materialData.textureFilePath = directoryPath + "/" + textureFilename;
+//		}
+//	}
+//	return materialData;
+//}
+//
+//ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename) {
+//	ModelData modelData;
+//	std::vector<Vector4> positions;
+//	std::vector<Vector3> normals;
+//	std::vector<Vector2> texcoords;
+//	std::string line;
+//	std::ifstream file(directoryPath + "/" + filename);
+//	assert(file.is_open());
+//
+//	while (std::getline(file, line)) {
+//		std::string identifier;
+//		std::istringstream s(line);
+//		s >> identifier;
+//
+//		if (identifier == "v") {
+//			Vector4 position;
+//			s >> position.x >> position.y >> position.z;
+//			position.x *= -1.0f;
+//			position.w = 1.0f;
+//			positions.push_back(position);
+//		} else if (identifier == "vt") {
+//			Vector2 texcoord;
+//			s >> texcoord.x >> texcoord.y;
+//			texcoord.y = 1.0f - texcoord.y;
+//			texcoords.push_back(texcoord);
+//		} else if (identifier == "vn") {
+//			Vector3 normal;
+//			s >> normal.x >> normal.y >> normal.z;
+//			normal.x *= -1.0f;
+//			normals.push_back(normal);
+//		} else if (identifier == "f") {
+//			VertexData triangle[3];
+//			//面は三角形限定
+//			for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex) {
+//				std::string vertexDefinition;
+//				s >> vertexDefinition;
+//				//
+//				std::istringstream v(vertexDefinition);
+//				uint32_t elementIndices[3];
+//				for (uint32_t element = 0; element < 3; ++element) {
+//					std::string index;
+//					std::getline(v, index, '/');
+//					elementIndices[element] = std::stoi(index);
+//				}
+//				//頂点を構築
+//				Vector4 position = positions[elementIndices[0] - 1];
+//				Vector2 texcoord = texcoords[elementIndices[1] - 1];
+//				Vector3 normal = normals[elementIndices[2] - 1];
+//				triangle[faceVertex] = { position, texcoord, normal };
+//				//VertexData vertex = { position, texcoord, normal };
+//				//modelData.vertices.push_back(vertex);
+//			}
+//			modelData.vertices.push_back(triangle[0]);
+//			modelData.vertices.push_back(triangle[2]);
+//			modelData.vertices.push_back(triangle[1]);
+//		} else if (identifier == "mtllib") {
+//			std::string materialFilename;
+//			s >> materialFilename;
+//			modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
+//		}
+//	}
+//	return modelData;
+//}
 
 ////SoundData SoundLoadWave(const char* filename) {
 ////	HRESULT result;
@@ -1872,101 +1897,102 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 //
 //}
 //
-void CreateSphereVertices(int kSubdivision, float radius, std::vector<VertexData>& vertexData) {
-	const float pi = static_cast<float>(std::numbers::pi);
-	const float kLonEvery = pi * 2.0f / static_cast<float>(kSubdivision); // 経度分割一つ分の角度
-	const float kLatEvery = pi / static_cast<float>(kSubdivision);        // 緯度分割一つ分の角度
 
-	vertexData.clear();
-	vertexData.resize(kSubdivision * kSubdivision * 6); // 6頂点（2三角形）×分割数
+//void CreateSphereVertices(int kSubdivision, float radius, std::vector<VertexData>& vertexData) {
+//	const float pi = static_cast<float>(std::numbers::pi);
+//	const float kLonEvery = pi * 2.0f / static_cast<float>(kSubdivision); // 経度分割一つ分の角度
+//	const float kLatEvery = pi / static_cast<float>(kSubdivision);        // 緯度分割一つ分の角度
+//
+//	vertexData.clear();
+//	vertexData.resize(kSubdivision * kSubdivision * 6); // 6頂点（2三角形）×分割数
+//
+//	for (int latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+//		float lat = -pi / 2.0f + kLatEvery * latIndex;
+//		for (int lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+//			float lon = lonIndex * kLonEvery;
+//
+//			// 6頂点分（2三角形）の位置とUVを計算
+//			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
+//
+//			// 各頂点の経度・緯度を計算
+//			float nextLat = lat + kLatEvery;
+//			float nextLon = lon + kLonEvery;
+//
+//			// 頂点座標
+//			Vector4 v0 = { radius * cos(lat) * cos(lon), radius * sin(lat), radius * cos(lat) * sin(lon), 1.0f };
+//			Vector4 v1 = { radius * cos(nextLat) * cos(lon), radius * sin(nextLat), radius * cos(nextLat) * sin(lon), 1.0f };
+//			Vector4 v2 = { radius * cos(lat) * cos(nextLon), radius * sin(lat), radius * cos(lat) * sin(nextLon), 1.0f };
+//			Vector4 v3 = { radius * cos(nextLat) * cos(nextLon), radius * sin(nextLat), radius * cos(nextLat) * sin(nextLon), 1.0f };
+//
+//			float f0 = 1.0f - (lat + pi / 2.0f) / pi;
+//			float f1 = 1.0f - (nextLat + pi / 2.0f) / pi;
+//
+//			// UV テクスチャ座標
+//			Vector2 uv0 = { lon / (2.0f * pi), f0 };
+//			Vector2 uv1 = { lon / (2.0f * pi), f1 };
+//			Vector2 uv2 = { nextLon / (2.0f * pi), f0 };
+//			Vector2 uv3 = { nextLon / (2.0f * pi), f1 };
+//
+//			auto calcNormal = [](const Vector4& v) -> Vector3 {
+//				float len = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+//				if (len > 0.0001f) {
+//					return { v.x / len, v.y / len, v.z / len };
+//				}
+//				return { 0.0f, 1.0f, 0.0f }; // 万一のため
+//				};
+//
+//			// 三角形1
+//			vertexData[start + 0] = { v0, uv0, calcNormal(v0) };
+//			vertexData[start + 1] = { v1, uv1, calcNormal(v1) };
+//			vertexData[start + 2] = { v2, uv2, calcNormal(v2) };
+//			// 三角形2
+//			vertexData[start + 3] = { v2, uv2, calcNormal(v2) };
+//			vertexData[start + 4] = { v1, uv1, calcNormal(v1) };
+//			vertexData[start + 5] = { v3, uv3, calcNormal(v3) };
+//
+//			//// 三角形1
+//			//vertexData[start + 0] = { v0, uv0 };
+//			//vertexData[start + 1] = { v1, uv1 };
+//			//vertexData[start + 2] = { v2, uv2 };
+//			//// 三角形2
+//			//vertexData[start + 3] = { v2, uv2 };
+//			//vertexData[start + 4] = { v1, uv1 };
+//			//vertexData[start + 5] = { v3, uv3 };
+//		}
+//	}
+//}
 
-	for (int latIndex = 0; latIndex < kSubdivision; ++latIndex) {
-		float lat = -pi / 2.0f + kLatEvery * latIndex;
-		for (int lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
-			float lon = lonIndex * kLonEvery;
-
-			// 6頂点分（2三角形）の位置とUVを計算
-			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
-
-			// 各頂点の経度・緯度を計算
-			float nextLat = lat + kLatEvery;
-			float nextLon = lon + kLonEvery;
-
-			// 頂点座標
-			Vector4 v0 = { radius * cos(lat) * cos(lon), radius * sin(lat), radius * cos(lat) * sin(lon), 1.0f };
-			Vector4 v1 = { radius * cos(nextLat) * cos(lon), radius * sin(nextLat), radius * cos(nextLat) * sin(lon), 1.0f };
-			Vector4 v2 = { radius * cos(lat) * cos(nextLon), radius * sin(lat), radius * cos(lat) * sin(nextLon), 1.0f };
-			Vector4 v3 = { radius * cos(nextLat) * cos(nextLon), radius * sin(nextLat), radius * cos(nextLat) * sin(nextLon), 1.0f };
-
-			float f0 = 1.0f - (lat + pi / 2.0f) / pi;
-			float f1 = 1.0f - (nextLat + pi / 2.0f) / pi;
-
-			// UV テクスチャ座標
-			Vector2 uv0 = { lon / (2.0f * pi), f0 };
-			Vector2 uv1 = { lon / (2.0f * pi), f1 };
-			Vector2 uv2 = { nextLon / (2.0f * pi), f0 };
-			Vector2 uv3 = { nextLon / (2.0f * pi), f1 };
-
-			auto calcNormal = [](const Vector4& v) -> Vector3 {
-				float len = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-				if (len > 0.0001f) {
-					return { v.x / len, v.y / len, v.z / len };
-				}
-				return { 0.0f, 1.0f, 0.0f }; // 万一のため
-				};
-
-			// 三角形1
-			vertexData[start + 0] = { v0, uv0, calcNormal(v0) };
-			vertexData[start + 1] = { v1, uv1, calcNormal(v1) };
-			vertexData[start + 2] = { v2, uv2, calcNormal(v2) };
-			// 三角形2
-			vertexData[start + 3] = { v2, uv2, calcNormal(v2) };
-			vertexData[start + 4] = { v1, uv1, calcNormal(v1) };
-			vertexData[start + 5] = { v3, uv3, calcNormal(v3) };
-
-			//// 三角形1
-			//vertexData[start + 0] = { v0, uv0 };
-			//vertexData[start + 1] = { v1, uv1 };
-			//vertexData[start + 2] = { v2, uv2 };
-			//// 三角形2
-			//vertexData[start + 3] = { v2, uv2 };
-			//vertexData[start + 4] = { v1, uv1 };
-			//vertexData[start + 5] = { v3, uv3 };
-		}
-	}
-}
-
-void DrawSphere(ID3D12Device* device, ID3D12GraphicsCommandList* commandList,
-	const Sphere& sphere, Matrix4x4 wvpMatrix,
-	ID3D12Resource* wvpResource, ID3D12Resource* materialResource,
-	ID3D12DescriptorHeap* srvDescriptorHeap, D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU,
-	ID3D12RootSignature* rootSignature, ID3D12PipelineState* pipelineState,
-	D3D12_VERTEX_BUFFER_VIEW vbView, std::vector<VertexData> vertexData
-) {
-
-	Matrix4x4* wvpData = nullptr;
-	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
-	*wvpData = wvpMatrix;
-	wvpResource->Unmap(0, nullptr);
-
-	// パイプライン・ルートシグネチャ設定
-	commandList->SetGraphicsRootSignature(rootSignature);
-	commandList->SetPipelineState(pipelineState);
-
-	// ディスクリプタヒープ設定
-	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap };
-	commandList->SetDescriptorHeaps(1, descriptorHeaps);
-
-	// 頂点バッファ設定
-	commandList->IASetVertexBuffers(0, 1, &vbView);
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	// ルートパラメータ設定
-	commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-	commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
-	commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
-
-	// 描画
-	commandList->DrawInstanced(static_cast<UINT>(vertexData.size()), 1, 0, 0);
-
-}
+//void DrawSphere(ID3D12Device* device, ID3D12GraphicsCommandList* commandList,
+//	const Sphere& sphere, Matrix4x4 wvpMatrix,
+//	ID3D12Resource* wvpResource, ID3D12Resource* materialResource,
+//	ID3D12DescriptorHeap* srvDescriptorHeap, D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU,
+//	ID3D12RootSignature* rootSignature, ID3D12PipelineState* pipelineState,
+//	D3D12_VERTEX_BUFFER_VIEW vbView, std::vector<VertexData> vertexData
+//) {
+//
+//	Matrix4x4* wvpData = nullptr;
+//	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
+//	*wvpData = wvpMatrix;
+//	wvpResource->Unmap(0, nullptr);
+//
+//	// パイプライン・ルートシグネチャ設定
+//	commandList->SetGraphicsRootSignature(rootSignature);
+//	commandList->SetPipelineState(pipelineState);
+//
+//	// ディスクリプタヒープ設定
+//	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap };
+//	commandList->SetDescriptorHeaps(1, descriptorHeaps);
+//
+//	// 頂点バッファ設定
+//	commandList->IASetVertexBuffers(0, 1, &vbView);
+//	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+//
+//	// ルートパラメータ設定
+//	commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+//	commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+//	commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+//
+//	// 描画
+//	commandList->DrawInstanced(static_cast<UINT>(vertexData.size()), 1, 0, 0);
+//
+//}
