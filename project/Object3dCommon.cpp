@@ -1,14 +1,18 @@
-#include "SpriteCommon.h"
+#include "Object3dCommon.h"
 #include "Logger.h"
 
-using namespace Logger;
-
-void SpriteCommon::Initialize(DirectXCommon* dxCommon) {
+void Object3dCommon::Initialize(DirectXCommon* dxCommon) {
 	dxCommon_ = dxCommon;
-	GenerateGraphicsPipeLine();
+	CreateGraphicsPipelineState();
 }
 
-void SpriteCommon::CreateRootSignature() {
+void Object3dCommon::CreatePrimitiveTopology() {
+	GetDxCommon()->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
+	GetDxCommon()->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
+	GetDxCommon()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+void Object3dCommon::CreateRootSignature() {
 	HRESULT hr;
 
 	//RootSignature作成
@@ -50,7 +54,7 @@ void SpriteCommon::CreateRootSignature() {
 	staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	descriptionRootSignature.pStaticSamplers = staticSamplers;
 	descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
-	
+
 
 	float triangleColor[3] = { 1.0f, 1.0f, 1.0f };
 
@@ -70,7 +74,7 @@ void SpriteCommon::CreateRootSignature() {
 	assert(SUCCEEDED(hr));
 }
 
-void SpriteCommon::GenerateGraphicsPipeLine() {
+void Object3dCommon::CreateGraphicsPipelineState() {
 	HRESULT hr;
 
 	CreateRootSignature();
@@ -120,8 +124,14 @@ void SpriteCommon::GenerateGraphicsPipeLine() {
 
 	//RasterizerStateの設定
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
-	rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
+	rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
+
+	//depthStencilStateの設定
+	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
+	depthStencilDesc.DepthEnable = true;
+	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
 	//PSOを生成
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipeLineStateDesc{};
@@ -139,13 +149,11 @@ void SpriteCommon::GenerateGraphicsPipeLine() {
 	graphicsPipeLineStateDesc.SampleDesc.Count = 1;
 	graphicsPipeLineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
 
+	//depthStencilの設定
+	graphicsPipeLineStateDesc.DepthStencilState = depthStencilDesc;
+	graphicsPipeLineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
 	//ID3D12PipelineState* graphicsPipelineState = nullptr;
 	hr = GetDxCommon()->GetDevice()->CreateGraphicsPipelineState(&graphicsPipeLineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
-}
-
-void SpriteCommon::CreatePrimitiveTopology() {
-	GetDxCommon()->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
-	GetDxCommon()->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
-	GetDxCommon()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
