@@ -40,6 +40,9 @@ jobs:
             NAME_CONDITIONS+=(-o -iname "$pattern")
           done
           unset NAME_CONDITIONS[0]
+           find . \
+           \( "${DIR_CONDITIONS[@]}" \) -type d -o \
+           \( "${NAME_CONDITIONS[@]}" \) -type f
           #1回の find 実行で全体を検索
           #1. .git を除外
           #2. 不要なディレクトリを検索(-type d)し、見つけたらパスを出力(-print)し、その中身を枝刈り(-prune)
