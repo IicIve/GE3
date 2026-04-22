@@ -1,5 +1,7 @@
 #pragma once
+
 #include "DirectXCommon.h"
+#include "Camera.h"
 #include <wrl.h>
 
 class Object3dCommon {
@@ -10,8 +12,12 @@ public:
 	void CreatePrimitiveTopology();
 	//void PreDraw();
 	
+	//セッター
+	void SetDefaultCamera(Camera* camera) { this->defaultCamera_ = camera; }
+
 	//ゲッター
 	DirectXCommon* GetDxCommon() { return dxCommon_; }
+	Camera* GetDefaultCamera() const { return defaultCamera_; }
 
 private:
 	//ルートシグネチャの作成
@@ -20,6 +26,7 @@ private:
 	void CreateGraphicsPipelineState();
 
 	DirectXCommon* dxCommon_;
+	Camera* defaultCamera_ = nullptr;
 
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;

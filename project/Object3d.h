@@ -12,6 +12,7 @@
 #include "Matrix.h"
 #include "MathFunc.h"
 #include "Model.h"
+#include "Camera.h"
 
 class Object3dCommon;
 
@@ -75,6 +76,7 @@ public:
 	void SetScale(const Vector3& scale) { transform.scale = scale; }
 	void SetRotate(const Vector3& rotate) { transform.rotate = rotate; }
 	void SetTranslate(const Vector3& translate) { transform.translate = translate; }
+	void SetCamera(Camera* camera) { this->camera = camera; }
 
 	//getter
 	const Vector3& GetScale() const { return transform.scale; }
@@ -91,6 +93,8 @@ private:
 
 	Object3dCommon* object3dCommon = nullptr;
 	Model* model = nullptr;
+	Camera* camera = nullptr;
+
 	//Objファイルのデータ
 	ModelData modelData;
 
@@ -123,14 +127,11 @@ private:
 	Transform transform;
 	Transform cameraTransform;
 
-	//Matrix4x4 worldMatrix;
-	//Matrix4x4 cameraMatrix;
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-	Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+	//Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+	//Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 	Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, static_cast<float>(Window::kClientWidth) / static_cast<float>(Window::kClientHeight), 0.1f, 100.0f);
-	//Matrix4x4 projectionMatrix = MakeOrthographicMatrix(0.0f, 0.0f, static_cast<float>(Window::kClientWidth), static_cast<float>(Window::kClientHeight), 0.0f, 100.0f);
-	//Matrix4x4 viewMatrix = MakeIdentity4x4();
+	Matrix4x4 viewProjectionMatrix;
 	Matrix4x4 worldViewProjectionMatrix;
 
 };

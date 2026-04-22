@@ -19,8 +19,9 @@ TextureManager* TextureManager::GetInstance() {
 	return instance;
 }
 
-void TextureManager::Initialize(DirectXCommon* dxCommon) {
+void TextureManager::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager) {
 	dxCommon_ = dxCommon;
+	srvManager_ = srvManager;
 	textureDatas.reserve(DirectXCommon::kMaxSRVCount);
 }
 
@@ -32,21 +33,23 @@ void TextureManager::Finalize() {
 void TextureManager::LoadTexture(const std::string& filePath) {
 	assert(GetDxCommon() != nullptr);
 
-	auto it = std::find_if(
+	/*auto it = std::find_if(
 		textureDatas.begin(),
 		textureDatas.end(),
 		[&](TextureData& textureData) {return textureData.filePath == filePath; }
-	);
-	if (it != textureDatas.end()) {
+	);*/
+	if (textureDatas.contains(filePath)) {
 		return;
 	}
 
 	assert(textureDatas.size() + kSRVIndexTop < DirectXCommon::kMaxSRVCount);
 
 	//テクスチャデータを追加
-	textureDatas.resize(textureDatas.size() + 1);
+	//textureDatas.resize(textureDatas.size() + 1);
 	//追加したテクスチャデータの参照を取得する
-	TextureData& textureData = textureDatas.back();
+
+	TextureData& textureData = textureDatas[filePath];
+	//TextureData& textureData = textureDatas.back();
 
 
 	//テクスチャファイルを読んでプログラムで扱えるようにする
@@ -74,13 +77,16 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 	hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
 	assert(SUCCEEDED(hr));
 
-	textureData.filePath = filePath;
+	//textureData.filePath = filePath;
 	textureData.metadata = mipImages.GetMetadata();
 	textureData.resource = GetDxCommon()->CreateTextureResource(textureData.metadata);
 	//テクスチャデータの要素番号数をSRVのインデックスとする
 	uint32_t srvIndex = static_cast<uint32_t>(textureDatas.size() - 1) + kSRVIndexTop;
-	textureData.srvHandleCPU = GetDxCommon()->GetSRVCPUDescriptorHandle(srvIndex);
-	textureData.srvHandleGPU = GetDxCommon()->GetSRVGPUDescriptorHandle(srvIndex);
+	textureData.srvIndex = srvManager_->Allocate();
+	textureData.srvHandleCPU = srvManager_->GetCPUDescriptorHandle(textureData.srvIndex);
+	textureData.srvHandleGPU = srvManager_->GetGPUDescriptorHandle(textureData.srvIndex);
+	//textureData.srvHandleCPU = GetDxCommon()->GetSRVCPUDescriptorHandle(srvIndex);
+	//textureData.srvHandleGPU = GetDxCommon()->GetSRVGPUDescriptorHandle(srvIndex);
 
 	//metaDataを基にSRVの設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
@@ -115,32 +121,40 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 	);
 }
 
-uint32_t TextureManager::GetTextureIndexByFilePath(const std::string& filePath) {
+uint32_t TextureManager::GetSrvIndex(const std::string& filePath) {
 	//読み込み済みテクスチャデータ検索
-	auto it = std::find_if(
+	/*auto it = std::find_if(
 		textureDatas.begin(),
 		textureDatas.end(),
 		[&](TextureData& textureData) {return textureData.filePath == filePath; }
-	);
-	if (it != textureDatas.end()){
-		//読み込み済みなら要素番号を返す
-		uint32_t textureIndex = static_cast<uint32_t>(std::distance(textureDatas.begin(), it));
-		return textureIndex;
-	}
+	);*/
+	//if (textureDatas.contains(filePath)){
+	//	//読み込み済みなら要素番号を返す
+	//	uint32_t textureIndex = static_cast<uint32_t>(std::distance(textureDatas.begin(), it));
+	//	return textureIndex;
+	//}
 	assert(0);
 	return 0;
+
+		assert(textureDatas.contains(filePath));
+		return textureDatas[filePath].srvIndex;
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetSrvHandleGPU(uint32_t textureIndex) {
+D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetSrvHandleGPU(const std::string& filePath) {
 	assert(textureIndex < textureDatas.size());
-	TextureData& textureData = textureDatas[textureIndex];
+	TextureData& textureData = textureDatas[filePath];
 	return textureData.srvHandleGPU;
+	/*assert(textureDatas.contains(filePath));
+	uint32_t index = textureDatas[filePath].srvIndex;
+	return srvManager_->GetGPUDescriptorHandle(index);*/
 }
 
-const DirectX::TexMetadata& TextureManager::GetMetaData(uint32_t textureIndex) {
+const DirectX::TexMetadata& TextureManager::GetMetaData(const std::string& filePath) {
 	assert(textureIndex < textureDatas.size());
-	TextureData& textureData = textureDatas[textureIndex];
+	TextureData& textureData = textureDatas[filePath];
 	return textureData.metadata;
+	/*assert(textureDatas.contains(filePath));
+	return textureDatas[filePath].metadata;*/
 	// TODO: return ステートメントをここに挿入します
 }
 

@@ -118,29 +118,16 @@ private:
 	//マテリアル用のリソース
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
 	Material* materialData = nullptr;
-	//materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite));
-	//materialDataSprite->color = Vector4(triangleColor[0], triangleColor[1], triangleColor[2], 1.0f);
-	//materialDataSprite->enableLighting = false;
-	//materialDataSprite->uvTransform = MakeIdentity4x4();
-	//materialDataSprite->uvTransform = uvTransformMatrix;
+	
 
-	//sprite用のTransformationMatrix用のリソースを作る
-	//constexpr size_t kCBSizeSprite = (sizeof(Matrix4x4) + 255) & ~255;
-	//Microsoft::WRL::ComPtr <ID3D12Resource> transformationMatrixResourceSprite = dxCommon->CreateBufferResource(kCBSizeSprite);
+	
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource;
 	//Matrix4x4* transformationMatrixData = nullptr;
 	//transformationMatrixResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDataSprite));
 	TransformationMatrix* transformationMatrixData = nullptr;
 
-	//WVP用のリソース作成
-	//constexpr size_t kCBSize = (sizeof(TransformationMatrix) + 255) & ~255;
-	//Microsoft::WRL::ComPtr <ID3D12Resource> wvpResource = dxCommon->CreateBufferResource(kCBSize);
-	//ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(TransformationMatrix));
+	
 	TransformationMatrix* wvpData = nullptr;
-	//wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
-	//wvpData->WVP = worldViewProjectionMatrix;
-	//wvpData->World = worldMatrix;
-	//*wvpData = { wvpData->WVP,wvpData->World };
 
 	//
 	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;
@@ -148,7 +135,8 @@ private:
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU{};
 
 	//テクスチャ番号
-	uint32_t textureIndex = UINT32_MAX;
+	std::string textureFilePath_;
+	//uint32_t textureIndex = UINT32_MAX;
 	//uint32_t textureIndex = 0;
 
 };

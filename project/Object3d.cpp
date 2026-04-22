@@ -60,21 +60,29 @@ void Object3d::Initialize(Object3dCommon* object3dCommon) {
 	//	TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
 
 	//Transform変数を作る
-	transform = { {1.0f,1.0f,1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
-	cameraTransform = { {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f,}, {0.0f,0.0f, -5.0f} };
+	transform = { {1.0f,1.0f,1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -5.0f} };
+
+	this->camera = object3dCommon->GetDefaultCamera();
 }
 
 void Object3d::Update() {
 
 	//transform.rotate.y += 0.01f;
 
-	cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-	viewMatrix = Inverse(cameraMatrix);
 	transform.rotate.y += 0.02f;
 
 	worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+	//viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
+
+	if (camera) {
+		const Matrix4x4& viewProjectionMatrix = camera->GetViewProjectionMatrix();
+		worldViewProjectionMatrix = Multiply(worldMatrix, viewProjectionMatrix);
+	} else {
+		worldViewProjectionMatrix = worldMatrix;
+	}
+
 	//worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
-	transformationMatrixData->WVP = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+	transformationMatrixData->WVP = worldViewProjectionMatrix;//Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 	transformationMatrixData->World = worldMatrix;
 
 }
