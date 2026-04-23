@@ -177,12 +177,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	model->initialize(modelCommon, "resources", "axis.obj");
 	object3dCommon->Initialize(dxCommon);
 	object3d->Initialize(object3dCommon);
-	object3d->SetModel("axis.obj");
+	object3d->SetModel(model);
 	object3d->SetCamera(camera);
 	object3d2->Initialize(object3dCommon);
-	object3d2->SetModel("plane.obj");
+	object3d2->SetModel(model);
 	object3d2->SetCamera(camera);
-	object3d2->SetTranslate({ 0.0f, 0.0f, 0.0f });
+	object3d2->SetTranslate({ 1.0f, 1.0f, 0.0f });
 	//camera->SetRotate({ 0.0f,0.0f,0.0f });
 	//camera->SetTranslate({ 0.0f,0.0f,0.0f });
 	//object3dCommon->SetDefaultCamera(camera);
