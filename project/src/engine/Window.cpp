@@ -1,7 +1,7 @@
 
 #include "Window.h"
 #include <cstdint>
-#include "imgui.h"
+#include <imgui_impl_win32.h>
 
 #pragma comment(lib, "winmm.lib")
 
@@ -61,6 +61,7 @@ void Window::Finalize() {
 
 LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
+	//ImGui用のウィンドウプロシージャ呼び出し
 	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
 		return true;
 	}

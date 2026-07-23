@@ -1,6 +1,15 @@
 #include "SrvManager.h"
 
+SrvManager* SrvManager::instance = nullptr;
+
 const uint32_t SrvManager::kMaxSrvCount = 512;
+
+SrvManager* SrvManager::GetInstance() {
+	if (instance == nullptr) {
+		instance = new SrvManager;
+	}
+	return instance;
+}
 
 void SrvManager::Initialize(DirectXCommon* dxCommon) {
 	this->dxCommon = dxCommon;
@@ -14,6 +23,11 @@ void SrvManager::Initialize(DirectXCommon* dxCommon) {
 	//デスクリプタ1個分のサイズを取得して記録
 	descriptorSize = dxCommon->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
+}
+
+void SrvManager::Finalize() {
+	delete instance;
+	instance = nullptr;
 }
 
 uint32_t SrvManager::Allocate() {

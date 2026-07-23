@@ -58,11 +58,16 @@ public:
 	/// <returns></returns>
 	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
 
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> GetSRVDescriptorHeap() const {
+		return srvDescriptorHeap;
+	}
+
 	//ゲッター
 	ID3D12Device* GetDevice() const { return device.Get(); }
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
 	ID3D12CommandQueue* GetCommandQueue() const { return commandQueue.Get(); }
 	ID3D12CommandAllocator* GetCommandAllocator() const { return commandAllocator.Get(); }
+	size_t GetSwapChainResourcesNum() const { return swapChainResources.size(); }
 	void WaitForGpu();
 
 	//最大SRV数 (最大テクスチャ枚数)

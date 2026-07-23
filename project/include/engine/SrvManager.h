@@ -6,40 +6,34 @@
 
 class SrvManager {
 public:
-	void Initialize(DirectXCommon* dxCommon);
+	static SrvManager* GetInstance();
 
-	//ヒープセットコマンド
+	void Initialize(DirectXCommon* dxCommon);
+	void Finalize();
 	void PreDraw();
 
-	//デスクリプタハンドル計算
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(uint32_t index);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(uint32_t index);
+	ID3D12DescriptorHeap* GetDescriptorHeap() const { return descriptorHeap.Get(); }
 
 	uint32_t Allocate();
+
 private:
-	//関数
+	static SrvManager* instance;
 
-	//SRVセットコマンド
-	void SetGraphicsRootDescriptorTable(UINT RootParameterIndex, uint32_t srvIndex);
-
-	//SRV生成(テクスチャ用)
-	void CreateSRVForTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, DXGI_FORMAT format, UINT MipLevels);
-	//SRV生成(structuredBuffer用)
-	void CreateSRVForStructuredBuffer(uint32_t srvIndex, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride);
-
-	//変数
+	void SetGraphicsRootDescriptorTable(UINT rootParameterIndex, uint32_t srvIndex);
+	void CreateSRVForTexture2D(uint32_t srvIndex, ID3D12Resource* resource, DXGI_FORMAT format, UINT mipLevels);
+	void CreateSRVForStructuredBuffer(uint32_t srvIndex, ID3D12Resource* resource, UINT numElements, UINT structureByteStride);
 
 	DirectXCommon* dxCommon = nullptr;
 
-	//最大SRV数 (最大テクスチャ数)
 	static const uint32_t kMaxSrvCount;
-	//SRV用のデスクリプタサイズ
-	uint32_t descriptorSize;
-	//SRV用のデスクリプタヒープ
+	uint32_t descriptorSize = 0;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap;
-	//次に使用するSRVインデックス
 	uint32_t useIndex = 0;
 
-
+	SrvManager() = default;
+	~SrvManager() = default;
+	SrvManager(SrvManager&) = delete;
+	SrvManager& operator=(SrvManager&) = delete;
 };
-
